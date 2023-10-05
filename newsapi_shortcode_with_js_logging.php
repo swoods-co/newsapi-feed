@@ -9,7 +9,49 @@ License: GPL-2.0+
 */
 
 // Function to Fetch News from API
+
+// Callback functions for rendering new settings fields
+function render_num_articles_field() {
+    $options = get_option('newsapi_settings');
+    echo "<input type='number' name='newsapi_settings[num_articles]' value='" . esc_attr($options['num_articles']) . "' />";
+}
+function render_article_category_field() {
+    $options = get_option('newsapi_settings');
+    echo "<input type='text' name='newsapi_settings[article_category]' value='" . esc_attr($options['article_category']) . "' />";
+}
+function render_enable_debug_field() {
+    $options = get_option('newsapi_settings');
+    echo "<input type='checkbox' name='newsapi_settings[enable_debug]' " . checked(1, $options['enable_debug'], false) . " value='1'>";
+}
+function render_display_orientation_field() {
+    $options = get_option('newsapi_settings');
+    echo "<select name='newsapi_settings[display_orientation]'>
+            <option value='vertical' " . selected($options['display_orientation'], 'vertical', false) . ">Vertical</option>
+            <option value='horizontal' " . selected($options['display_orientation'], 'horizontal', false) . ">Horizontal</option>
+          </select>";
+}
+function render_base_css_field() {
+    $options = get_option('newsapi_settings');
+    echo "<textarea name='newsapi_settings[base_css]'>" . esc_textarea($options['base_css']) . "</textarea>";
+}
+
 function fetch_news_from_api() {
+
+// New code to fetch additional settings
+$num_articles = isset($options['num_articles']) ? $options['num_articles'] : 10;  // Default to 10 articles
+$article_category = isset($options['article_category']) ? $options['article_category'] : 'general';  // Default to 'general'
+$enable_debug = isset($options['enable_debug']) ? $options['enable_debug'] : false;  // Default to false
+$display_orientation = isset($options['display_orientation']) ? $options['display_orientation'] : 'vertical';  // Default to 'vertical'
+$base_css = isset($options['base_css']) ? $options['base_css'] : '';  // Default to empty
+
+// Modify the API endpoint to include new parameters
+$endpoint = "https://newsapi.org/v2/everything?q={$article_category}&pageSize={$num_articles}&apiKey={$api_key}";
+
+// New code for debugging
+if ($enable_debug) {
+    // Your debugging logic here
+}
+
     // Fetch the API key from the WordPress options table
     $options = get_option('newsapi_settings');
     $api_key = isset($options['api_key']) ? $options['api_key'] : '';
@@ -90,7 +132,44 @@ add_action('admin_init', 'newsapi_settings_init');
 function newsapi_settings_init() {
     register_setting('newsapi_settings_group', 'newsapi_settings');
     add_settings_section('newsapi_settings_section', 'API Settings', 'newsapi_settings_section_display', 'newsapi_settings_page');
-    add_settings_field('api_key', 'API Key', 'newsapi_api_key_display', 'newsapi_settings_page', 'newsapi_settings_section');
+    add_settings_field(
+
+// New settings fields for additional options
+add_settings_field(
+    'num_articles', 
+    'Number of Articles', 
+    'render_num_articles_field', 
+    'option_page', 
+    'section'),
+add_settings_field(
+    'article_category', 
+    'Article Category', 
+    'render_article_category_field', 
+    'option_page', 
+    'section'
+);
+add_settings_field(
+    'enable_debug', 
+    'Enable Debugging', 
+    'render_enable_debug_field', 
+    'option_page', 
+    'section'
+);
+add_settings_field(
+    'display_orientation', 
+    'Display Orientation', 
+    'render_display_orientation_field', 
+    'option_page', 
+    'section'
+);
+add_settings_field(
+    'base_css', 
+    'Base CSS', 
+    'render_base_css_field', 
+    'option_page', 
+    'section'
+);
+'api_key', 'API Key', 'newsapi_api_key_display', 'newsapi_settings_page', 'newsapi_settings_section');
 }
 function newsapi_settings_section_display() {
     echo 'Enter your NewsAPI.org API key below.';
